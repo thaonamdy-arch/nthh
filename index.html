@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trò chơi: Cặp đôi hoàn hảo - Nguyên tố hóa học (Nội dung mở)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+            min-height: 100vh;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col items-center justify-start p-4 md:p-6">
+
+    <div id="app" class="w-full max-w-5xl mx-auto">
+        
+        <!-- Login Screen -->
+        <div id="login-screen" class="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 border border-white/50 text-center max-w-md mx-auto mt-12 transition-all">
+            <div class="inline-block p-4 bg-emerald-100 text-emerald-600 rounded-2xl mb-4 text-4xl shadow-inner">🧪</div>
+            <h1 class="text-3xl font-extrabold text-emerald-900 mb-2">Cặp Đôi Hoàn Hảo</h1>
+            <p class="text-emerald-700 font-semibold mb-1">Chủ đề: Nguyên Tố Hóa Học (Hóa 10)</p>
+            <p class="text-slate-600 mb-6 text-sm">Quan sát nội dung các thẻ hiển thị trên màn hình và ghép nối 1 <b>Thẻ Thông Tin</b> với 1 <b>Thẻ Đối Tượng</b> tương ứng!</p>
+            
+            <form id="login-form" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Họ và tên học sinh:</label>
+                    <input type="text" id="student-name" required placeholder="Nhập họ và tên..." class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all text-slate-800">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Lớp:</label>
+                    <input type="text" id="student-class" required placeholder="Ví dụ: 10A1..." class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all text-slate-800">
+                </div>
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 hover:from-emerald-700 hover:to-teal-700 transition-all transform active:scale-95">
+                    Bắt đầu chơi 🚀
+                </button>
+            </form>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="hidden">
+            <!-- Header Status Bar -->
+            <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-4 mb-6 flex flex-wrap items-center justify-between gap-4 border border-white/50">
+                <div>
+                    <span id="display-name" class="font-bold text-emerald-900 text-lg">Học sinh: --</span>
+                    <span class="text-slate-400 mx-2">|</span>
+                    <span id="display-class" class="text-slate-600 font-medium">Lớp: --</span>
+                </div>
+                <div class="flex items-center gap-4 sm:gap-6">
+                    <div class="bg-amber-100 text-amber-800 px-4 py-1.5 rounded-xl font-bold text-sm shadow-inner flex items-center gap-1.5">
+                        ⭐ Điểm: <span id="score-val">0</span> / 10
+                    </div>
+                    <div class="bg-emerald-100 text-emerald-800 px-4 py-1.5 rounded-xl font-bold text-sm shadow-inner flex items-center gap-1.5">
+                        ⏱️ Thời gian: <span id="timer-val">00:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instruction Notice -->
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl mb-6 flex flex-wrap items-center justify-between gap-2 text-sm font-medium shadow-sm">
+                <span>💡 Bấm chọn 1 <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded-md font-bold">📖 Thẻ Thông Tin</span> và 1 <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md font-bold">🎯 Thẻ Đối Tượng</span> tương ứng!</span>
+                <span class="text-xs text-slate-500 font-normal">*Tất cả nội dung đã được mở sẵn</span>
+            </div>
+
+            <!-- Card Grid (20 cards face UP) -->
+            <div id="cards-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3.5">
+                <!-- Cards injected via JS -->
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 border border-white/50 text-center max-w-md mx-auto mt-12 animate-fade-in">
+            <div class="inline-block p-4 bg-emerald-100 text-emerald-600 rounded-2xl mb-4 text-4xl shadow-inner">🏆</div>
+            <h2 class="text-3xl font-extrabold text-emerald-900 mb-2">Hoàn Thành Xuất Sắc!</h2>
+            <p class="text-slate-600 mb-6 text-sm">Chúc mừng bạn đã hoàn thành xuất sắc trò chơi ghép đôi nguyên tố hóa học.</p>
+            
+            <div class="bg-slate-50 rounded-2xl p-4 mb-6 space-y-3 text-left border border-slate-200">
+                <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">Học sinh:</span> <span id="res-name" class="font-bold text-slate-800"></span></div>
+                <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">Lớp:</span> <span id="res-class" class="font-bold text-slate-800"></span></div>
+                <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">Tổng điểm:</span> <span id="res-score" class="font-extrabold text-emerald-600 text-lg"></span></div>
+                <div class="flex justify-between items-center"><span class="text-slate-500 font-medium">Thời gian hoàn thành:</span> <span id="res-time" class="font-bold text-emerald-600"></span></div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 hover:from-emerald-700 hover:to-teal-700 transition-all transform active:scale-95">
+                Chơi lại 🔄
+            </button>
+        </div>
+
+        <!-- Explanation Modal (For wrong answers) -->
+        <div id="explanation-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full border border-slate-100 text-center">
+                <div class="inline-block p-3 bg-rose-100 text-rose-600 rounded-full mb-3 text-2xl">❌</div>
+                <h3 class="text-xl font-bold text-rose-800 mb-2">Chưa chính xác!</h3>
+                <p id="explanation-text" class="text-slate-600 text-sm mb-6 leading-relaxed"></p>
+                <button onclick="closeExplanation()" class="w-full py-2.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all">
+                    Đã hiểu, tiếp tục chơi
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Data set of 10 pairs based on topic
+        const elementsData = [
+            { id: 1, info: "Có số hiệu nguyên tử Z = 1", target: "H – Hydrogen", explanation: "Hydrogen là nguyên tố đầu tiên trong bảng tuần hoàn, có số hiệu nguyên tử Z = 1, 1 electron trong nguyên tử." },
+            { id: 2, info: "Có 6 proton trong hạt nhân", target: "C – Carbon", explanation: "Carbon có số hiệu nguyên tử Z = 6, hạt nhân chứa 6 proton và 6 neutron (phổ biến)." },
+            { id: 3, info: "Có 8 electron trong nguyên tử", target: "O – Oxygen", explanation: "Oxygen có số hiệu nguyên tử Z = 8, số electron trong nguyên tử trung hòa là 8." },
+            { id: 4, info: "Là nguyên tố kim loại, Z = 11", target: "Na – Sodium", explanation: "Sodium (Natri) là kim loại kiềm thuộc nhóm IA, có số hiệu nguyên tử Z = 11." },
+            { id: 5, info: "Là nguyên tố halogen, Z = 17", target: "Cl – Chlorine", explanation: "Chlorine (Clo) là phi kim thuộc nhóm halogen (nhóm VIIA), có số hiệu nguyên tử Z = 17." },
+            { id: 6, info: "Có 2 electron lớp ngoài cùng, Z = 12", target: "Mg – Magnesium", explanation: "Magnesium (Magiê) thuộc nhóm IIA, có 2 electron lớp ngoài cùng và số hiệu nguyên tử Z = 12." },
+            { id: 7, info: "Nguyên tử có 7 electron lớp ngoài cùng", target: "F – Fluorine", explanation: "Fluorine (Flo) thuộc nhóm halogen với 7 electron lớp ngoài cùng, số hiệu nguyên tử Z = 9." },
+            { id: 8, info: "Là nguyên tố có kí hiệu Fe", target: "Iron – Sắt", explanation: "Iron (Sắt) là nguyên tố kim loại chuyển tiếp có kí hiệu hóa học là Fe, số hiệu nguyên tử Z = 26." },
+            { id: 9, info: "Có Z = 20", target: "Ca – Calcium", explanation: "Calcium (Canxi) là nguyên tố kim loại kiềm thổ, có số hiệu nguyên tử Z = 20." },
+            { id: 10, info: "Là nguyên tố khí hiếm có Z = 18", target: "Ar – Argon", explanation: "Argon là nguyên tố khí hiếm thuộc nhóm VIIIA, có số hiệu nguyên tử Z = 18 với lớp vỏ electron bão hòa." }
+        ];
+
+        let studentInfo = { name: '', className: '' };
+        let score = 0;
+        let timerInterval = null;
+        let secondsElapsed = 0;
+        let firstSelectedCard = null;
+        let secondSelectedCard = null;
+        let lockBoard = false;
+        let matchedPairsCount = 0;
+
+        // Sound synthesizer setup with Tone.js
+        let synth;
+        function initAudio() {
+            if (!synth) {
+                synth = new Tone.Synth().toDestination();
+            }
+            if (Tone.context.state !== 'running') {
+                Tone.start();
+            }
+        }
+
+        function playTingSound() {
+            initAudio();
+            try {
+                synth.triggerAttackRelease("C6", "8n", Tone.now());
+                setTimeout(() => {
+                    synth.triggerAttackRelease("G6", "8n", Tone.now());
+                }, 100);
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        function playBzzzzSound() {
+            initAudio();
+            try {
+                const buzzSynth = new Tone.Synth({
+                    oscillator: { type: "sawtooth" },
+                    envelope: { attack: 0.05, decay: 0.3, sustain: 0.1, release: 0.2 }
+                }).toDestination();
+                buzzSynth.triggerAttackRelease("A2", "4n", Tone.now());
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            studentInfo.name = document.getElementById('student-name').value.trim();
+            studentInfo.className = document.getElementById('student-class').value.trim();
+
+            if (!studentInfo.name || !studentInfo.className) return;
+
+            document.getElementById('display-name').textContent = `Học sinh: ${studentInfo.name}`;
+            document.getElementById('display-class').textContent = `Lớp: ${studentInfo.className}`;
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            startGame();
+        });
+
+        function startGame() {
+            const grid = document.getElementById('cards-grid');
+            grid.innerHTML = '';
+            score = 0;
+            matchedPairsCount = 0;
+            document.getElementById('score-val').textContent = score;
+
+            // Start Timer
+            secondsElapsed = 0;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                let mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+                let secs = (secondsElapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timer-val').textContent = `${mins}:${secs}`;
+            }, 1000);
+
+            // Create card array (20 cards face up)
+            let cardDeck = [];
+            elementsData.forEach(item => {
+                cardDeck.push({ pairId: item.id, type: 'info', title: '📖 THÔNG TIN', content: item.info, explanation: item.explanation });
+                cardDeck.push({ pairId: item.id, type: 'target', title: '🎯 ĐỐI TƯỢNG', content: item.target, explanation: item.explanation });
+            });
+
+            // Shuffle deck using Fisher-Yates algorithm
+            for (let i = cardDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cardDeck[i], cardDeck[j]] = [cardDeck[j], cardDeck[i]];
+            }
+
+            // Render cards face UP directly
+            cardDeck.forEach((cardData, index) => {
+                const cardEl = document.createElement('div');
+                const isInfo = cardData.type === 'info';
+
+                cardEl.className = `card-item relative bg-white rounded-2xl p-3.5 shadow-md border-2 transition-all cursor-pointer flex flex-col justify-between min-h-[120px] select-none hover:shadow-lg hover:-translate-y-0.5 ${
+                    isInfo ? 'border-teal-200 hover:border-teal-400' : 'border-indigo-200 hover:border-indigo-400'
+                }`;
+                
+                cardEl.dataset.pairId = cardData.pairId;
+                cardEl.dataset.type = cardData.type;
+                cardEl.dataset.explanation = cardData.explanation;
+
+                const badgeBg = isInfo ? 'bg-teal-100 text-teal-800' : 'bg-indigo-100 text-indigo-800';
+
+                cardEl.innerHTML = `
+                    <div class="flex items-center justify-between w-full mb-1">
+                        <span class="text-[11px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-md ${badgeBg}">
+                            ${cardData.title}
+                        </span>
+                        <span class="text-[10px] font-bold text-slate-400">#${index + 1}</span>
+                    </div>
+                    <div class="card-text text-slate-800 font-bold text-xs sm:text-sm my-auto text-center leading-snug py-2">
+                        ${cardData.content}
+                    </div>
+                    <div class="matched-badge hidden text-center text-xs font-bold text-emerald-600 pt-1 border-t border-emerald-200">
+                        ✓ Đã ghép đúng
+                    </div>
+                `;
+
+                cardEl.addEventListener('click', () => handleCardClick(cardEl));
+                grid.appendChild(cardEl);
+            });
+        }
+
+        function handleCardClick(cardEl) {
+            if (lockBoard) return;
+            if (cardEl.classList.contains('matched')) return;
+
+            // If user clicks the already selected first card, deselect it
+            if (firstSelectedCard === cardEl) {
+                deselectCard(cardEl);
+                firstSelectedCard = null;
+                return;
+            }
+
+            // Select card visual effect
+            selectCard(cardEl);
+
+            if (!firstSelectedCard) {
+                firstSelectedCard = cardEl;
+            } else {
+                secondSelectedCard = cardEl;
+                checkForMatch(firstSelectedCard, secondSelectedCard);
+            }
+        }
+
+        function selectCard(cardEl) {
+            cardEl.classList.add('ring-4', 'ring-amber-400', 'border-amber-500', 'scale-[1.02]', 'bg-amber-50/50');
+        }
+
+        function deselectCard(cardEl) {
+            cardEl.classList.remove('ring-4', 'ring-amber-400', 'ring-rose-500', 'border-amber-500', 'border-rose-500', 'scale-[1.02]', 'bg-amber-50/50', 'animate-shake');
+        }
+
+        function checkForMatch(card1, card2) {
+            const pair1 = card1.dataset.pairId;
+            const pair2 = card2.dataset.pairId;
+            const type1 = card1.dataset.type;
+            const type2 = card2.dataset.type;
+
+            // Match condition: same pairId and different types (one info, one target)
+            if (pair1 === pair2 && type1 !== type2) {
+                // Correct Match
+                playTingSound();
+                score += 1;
+                document.getElementById('score-val').textContent = score;
+                matchedPairsCount += 1;
+
+                markMatched(card1);
+                markMatched(card2);
+
+                resetSelection();
+
+                if (matchedPairsCount === 10) {
+                    clearInterval(timerInterval);
+                    setTimeout(showResultScreen, 600);
+                }
+            } else {
+                // Wrong Match
+                playBzzzzSound();
+                lockBoard = true;
+
+                // Highlight red and shake
+                card1.classList.add('ring-rose-500', 'border-rose-500', 'animate-shake');
+                card2.classList.add('ring-rose-500', 'border-rose-500', 'animate-shake');
+
+                const explanation = card2.dataset.explanation || card1.dataset.explanation;
+
+                setTimeout(() => {
+                    showExplanation(explanation);
+                }, 400);
+            }
+        }
+
+        function markMatched(cardEl) {
+            deselectCard(cardEl);
+            cardEl.classList.add('matched', 'bg-emerald-50', 'border-emerald-400', 'opacity-70', 'pointer-events-none');
+            cardEl.querySelector('.matched-badge').classList.remove('hidden');
+        }
+
+        function resetSelection() {
+            firstSelectedCard = null;
+            secondSelectedCard = null;
+            lockBoard = false;
+        }
+
+        function showExplanation(text) {
+            document.getElementById('explanation-text').textContent = text;
+            document.getElementById('explanation-modal').classList.remove('hidden');
+            document.getElementById('explanation-modal').classList.add('flex');
+        }
+
+        function closeExplanation() {
+            document.getElementById('explanation-modal').classList.remove('flex');
+            document.getElementById('explanation-modal').classList.add('hidden');
+
+            if (firstSelectedCard) deselectCard(firstSelectedCard);
+            if (secondSelectedCard) deselectCard(secondSelectedCard);
+            resetSelection();
+        }
+
+        function showResultScreen() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            document.getElementById('res-name').textContent = studentInfo.name;
+            document.getElementById('res-class').textContent = studentInfo.className;
+            document.getElementById('res-score').textContent = `${score} / 10 điểm`;
+            
+            let mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            let secs = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById('res-time').textContent = `${mins} phút ${secs} giây`;
+        }
+    </script>
+</body>
+</html>
